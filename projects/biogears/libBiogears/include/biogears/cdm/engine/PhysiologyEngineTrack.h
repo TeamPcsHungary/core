@@ -100,6 +100,7 @@ public:
 
   virtual void SetupRequests(bool append = false);
   virtual void TrackData(double currentTime_s, bool append = false);
+  virtual void PrintData(double currentTime_s, bool append = false);
   virtual void PullData();
   virtual bool TrackRequest(SEDataRequest& dr);
   virtual void ForceConnection() { m_ForceConnection = true; }

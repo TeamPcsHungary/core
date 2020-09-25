@@ -218,6 +218,18 @@ void PhysiologyEngineTrack::TrackData(double time_s, bool append )
   PullData();
   m_DataTrack.StreamProbesToFile(time_s, m_ResultsStream);
 }
+
+void PhysiologyEngineTrack::PrintData(double time_s, bool append )
+{
+  if (!m_DataRequestMgr.HasDataRequests()) {
+    return; // Nothing to do here...
+  }
+
+  SetupRequests(append);
+  PullData();
+  m_DataTrack.StreamProbesToFile(time_s, std::cout);
+}
+
 void PhysiologyEngineTrack::PullData()
 {
   SEDataRequestScalar* ds;
