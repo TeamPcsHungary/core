@@ -227,8 +227,8 @@ void PhysiologyEngineTrack::PrintData(double time_s, bool append )
 
   SetupRequests(append);
   PullData();
-  std::ostream* fp = &std::cout;
-  m_DataTrack.StreamProbesToFile(time_s, *fp);
+  m_ResultsStream.basic_ios<char>::rdbuf(std::cout.rdbuf());
+  m_DataTrack.StreamProbesToFile(time_s, m_ResultsStream);
 }
 
 void PhysiologyEngineTrack::PullData()
