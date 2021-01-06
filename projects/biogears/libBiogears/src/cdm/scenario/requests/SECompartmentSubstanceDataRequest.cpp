@@ -33,12 +33,16 @@ void SECompartmentSubstanceDataRequest::Clear()
   m_Substance = nullptr;
 }
 //-----------------------------------------------------------------------------
-size_t SECompartmentSubstanceDataRequest::HashCode()
+size_t SECompartmentSubstanceDataRequest::HashCode() const
 {
-  size_t h = SECompartmentDataRequest::HashCode();
-  if (m_Substance != nullptr)
-    h += std::hash<std::string>()(m_Substance->GetName());
-  return h;
+  if (m_Hash == 0) {
+    std::string hashString = m_Name + m_Compartment;
+    if (HasSubstance()) {
+      hashString += m_Substance->GetName();
+    }
+    m_Hash = std::hash<std::string>()(hashString);
+  }
+  return m_Hash;
 }
 //-----------------------------------------------------------------------------
 bool SECompartmentSubstanceDataRequest::Load(const CDM::CompartmentSubstanceDataRequestData& in, const SESubstanceManager& substances)
@@ -64,6 +68,7 @@ SESubstance* SECompartmentSubstanceDataRequest::GetSubstance() const
 void SECompartmentSubstanceDataRequest::SetSubstance(SESubstance* substance)
 {
   m_Substance = substance;
+  m_Hash = 0;
 }
 //-----------------------------------------------------------------------------
 bool SECompartmentSubstanceDataRequest::HasSubstance() const
@@ -88,6 +93,7 @@ void SECompartmentSubstanceDataRequest::Set(const std::string& cmpt, SESubstance
   m_Name = name;
   m_RequestedUnit = unit;
   m_Unit = nullptr;
+  m_Hash = 0;
 }
 //-----------------------------------------------------------------------------
 void SECompartmentSubstanceDataRequest::Set(const char* cmpt, SESubstance& substance, const char* name, const CCompoundUnit& unit)
@@ -102,6 +108,7 @@ void SECompartmentSubstanceDataRequest::Set(const std::string& cmpt, SESubstance
   m_Name = name;
   m_RequestedUnit = "";
   m_Unit = &unit;
+  m_Hash = 0;
 }
 //-----------------------------------------------------------------------------
 }

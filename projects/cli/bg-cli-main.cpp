@@ -17,6 +17,7 @@
 #include <thread>
 
 #include "exec/Driver.h"
+#include "exec/PopulationGenerator.h"
 
 #include "data/CompoundGenerator.h"
 #include "data/EnvironmentGenerator.h"
@@ -39,7 +40,7 @@
 void print_help()
 {
   std::cout << "Usage cmd_bio [HELP, GENDATA, GENSTATES, GENSEPSIS, VERIFY, VERSION]\n"
-               "[JOBS N]\n"
+               "[JOBS N] [GENPATIENTS [FILE] N]\n"
                "[CONFIG [FILE]...], [SCENARIO [FILE]...], [TEST cdm|bge], [VALIDATE patient|drug|system|all]\n"
                "[GENTABLES html|md|xml|web|all]\n\n";
 
@@ -68,7 +69,7 @@ int main(int argc, char** argv)
     { "H", "HELP", "GENDATA", "GENSEPSIS", "GENSTATES", "VERIFY", "V", "VERSION" }, /*Options*/
 #endif
     { "J", "JOBS" }, /*Keywords*/
-    { "TEST", "CONFIG", "SCENARIO", "VALIDATE", "GENTABLES" } /*MultiWords*/
+    { "TEST", "CONFIG", "SCENARIO", "VALIDATE", "GENTABLES", "GENPATIENTS" } /*MultiWords*/
   );
 
   bool run_patient_validation = false;
@@ -123,6 +124,11 @@ int main(int argc, char** argv)
   if (args.Option("GENSEPSIS")) {
     const biogears::Config runs { "GenSepsisStates.config" };
     driver.queue(runs, as_subprocess);
+  }
+
+  if (args.MultiWordFound("GENPATIENTS")) {
+    biogears::PopulationGenerator generator { args.MultiWord("GENPATIENTS") };
+    generator.Generate();
   }
 
   if (args.Option("GENDATA")) { // gen-data
@@ -226,17 +232,25 @@ int main(int argc, char** argv)
     for (auto& table : tables) {
       std::transform(table.begin(), table.end(), table.begin(), ::tolower);
       if (table == "html") {
-        report_writer.gen_tables(biogears::ReportWriter::HTML);
+        report_writer.generate_system_tables(biogears::ReportWriter::HTML);
+        report_writer.generate_patient_tables(biogears::ReportWriter::HTML);
       } else if (table == "md") {
-        report_writer.gen_tables(biogears::ReportWriter::MD);
+        report_writer.generate_system_tables(biogears::ReportWriter::MD);
+        report_writer.generate_patient_tables(biogears::ReportWriter::MD);
       } else if (table == "xml") {
-        report_writer.gen_tables(biogears::ReportWriter::XML);
+        report_writer.generate_system_tables(biogears::ReportWriter::XML);
+        report_writer.generate_patient_tables(biogears::ReportWriter::XML);
       } else if (table == "web") {
-        report_writer.gen_tables(biogears::ReportWriter::WEB);
+        report_writer.generate_system_tables(biogears::ReportWriter::WEB);
+        report_writer.generate_patient_tables(biogears::ReportWriter::WEB);
       } else if (table == "all") {
-        report_writer.gen_tables(biogears::ReportWriter::HTML);
-        report_writer.gen_tables(biogears::ReportWriter::MD);
-        report_writer.gen_tables(biogears::ReportWriter::XML);
+        report_writer.generate_system_tables(biogears::ReportWriter::HTML);
+        report_writer.generate_system_tables(biogears::ReportWriter::MD);
+        report_writer.generate_system_tables(biogears::ReportWriter::XML);
+
+        report_writer.generate_patient_tables(biogears::ReportWriter::HTML);
+        report_writer.generate_patient_tables(biogears::ReportWriter::MD);
+        report_writer.generate_patient_tables(biogears::ReportWriter::XML);
       } else {
         std::cout << "Warning: " << table << " is not a valid keyword.\n";
       }

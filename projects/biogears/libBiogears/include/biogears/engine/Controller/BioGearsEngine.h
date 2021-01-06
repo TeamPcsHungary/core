@@ -65,8 +65,25 @@ public:
   virtual double GetTimeStep(const TimeUnit& unit) override;
   virtual double GetSimulationTime(const TimeUnit& unit) override;
 
-  virtual void AdvanceModelTime() override;
-  virtual void AdvanceModelTime(double time, const TimeUnit& unit = TimeUnit::s) override; //NOTE: Maynot compile on clang will evaluate
+  //!-------------------------------------------------------------------------------------------------
+  //! \brief
+  //! Advances the model time by one deltaT.
+  //!
+  //! BioGears updates at the rate set in BioGearsConfiguration.xml which defaults to 0.02 or 50hz
+  //! This is the resolution of the underlying simulation. That is to say you can not record
+  //!	physiology metrics at simulation times that would fall between a deltaT. Additionally advancing time by
+  //! non multiples of deltaT can result in the true simtime being out of sync with the expected time sync
+  //!-------------------------------------------------------------------------------------------------
+  virtual void AdvanceModelTime(bool appendDataTrack = false) override;
+
+  //!-------------------------------------------------------------------------------------------------
+  //! \brief
+  //! Subdivdes the time provided by deltaT and calls AdvanceModelTime() for each subdivision
+  //!
+  //! See AdvanceModelTime(bool) for additional details.
+  //!
+  //!-------------------------------------------------------------------------------------------------
+  virtual void AdvanceModelTime(double time, const TimeUnit& unit = TimeUnit::s, bool appendDataTrack = false) override; //NOTE: Maynot compile on clang will evaluate
   virtual bool ProcessAction(const SEAction& action) override;
 
   virtual SESubstanceManager& GetSubstanceManager() override;
@@ -93,6 +110,17 @@ public:
   virtual const SECompartmentManager& GetCompartments() override;
   virtual Tree<const char*> GetDataRequestGraph() const override;
 
+  virtual bool IsAutoTracking() const override;
+  virtual void SetAutoTrackFlag(bool flag) override;
+  virtual bool IsTrackingStabilization() const override;
+
+  //!-------------------------------------------------------------------------------------------------
+  //! \brief
+  //! This value will be overridden if TrackingStabilizationCriteria is loaded by any means
+  //! After it is set. But can be used as a shortcut to modify m_Config->GetStabilizationCriteria()->TrackStabilization()
+  //! After stabiliztion criteira has been loaded.
+  //!-------------------------------------------------------------------------------------------------
+  virtual void SetTrackStabilizationFlag(bool flag) override;
 
 protected:
   virtual bool IsReady();
@@ -105,6 +133,9 @@ protected:
 #pragma warning(push,0)
   std::stringstream m_ss;
 #pragma warning(pop)
+
+  bool m_isAutoTracking = true;
+  bool m_areTrackingStabilization = false;
 
 };
 }

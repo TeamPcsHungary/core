@@ -1241,6 +1241,19 @@ void SEPatientActionCollection::RemoveSubstanceOralDose(const SESubstance& sub)
   SAFE_DELETE(od);
 }
 //-------------------------------------------------------------------------------
+const std::map<const SESubstance*, SESubstanceNasalDose*>& SEPatientActionCollection::GetSubstanceNasalDoses() const
+{
+  return m_SubstanceNasalDoses;
+}
+//-------------------------------------------------------------------------------
+void SEPatientActionCollection::RemoveSubstanceNasalDose(const SESubstance& sub)
+{
+  SESubstanceNasalDose* od = m_SubstanceNasalDoses[&sub];
+  m_SubstanceNasalDoses.erase(&sub);
+  SAFE_DELETE(od);
+}
+
+//-------------------------------------------------------------------------------
 const std::map<const SESubstanceCompound*, SESubstanceCompoundInfusion*>& SEPatientActionCollection::GetSubstanceCompoundInfusions() const
 {
   return m_SubstanceCompoundInfusions;
@@ -1297,6 +1310,28 @@ bool SEPatientActionCollection::AdministerSubstance(const CDM::SubstanceAdminist
       return true;
     }
     return IsValid(*mySubInfuse);
+  }
+
+  const CDM::SubstanceNasalDoseData* NasalDose = dynamic_cast<const CDM::SubstanceNasalDoseData*>(&subAdmin);
+  if (NasalDose != nullptr) {
+    SESubstance* sub = m_Substances.GetSubstance(NasalDose->Substance());
+    if (sub == nullptr) {
+      m_ss << "Unknown substance : " << NasalDose->Substance();
+      Error(m_ss);
+      return false;
+    }
+    SESubstanceNasalDose* myNasalDose = m_SubstanceNasalDoses[sub];
+    if (myNasalDose == nullptr) {
+      myNasalDose = new SESubstanceNasalDose(*sub);
+      m_SubstanceNasalDoses[sub] = myNasalDose;
+      m_Substances.AddActiveSubstance(*sub);
+    }
+    myNasalDose->Load(*NasalDose);
+    if (!myNasalDose->IsActive()) {
+      RemoveSubstanceNasalDose(*sub);
+      return true;
+    }
+    return IsValid(*myNasalDose);
   }
 
   const CDM::SubstanceOralDoseData* oralDose = dynamic_cast<const CDM::SubstanceOralDoseData*>(&subAdmin);

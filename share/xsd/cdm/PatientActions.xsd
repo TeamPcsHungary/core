@@ -398,6 +398,20 @@ specific language governing permissions and limitations under the License.
 		</xs:complexContent>
 	</xs:complexType>
 	
+	<!--@brief The state variables of a drug administered nasally.-->
+	<xs:complexType name="NasalStateData">
+		<xs:complexContent>
+			<xs:extension base="ObjectData">
+				<xs:sequence>
+					<xs:element name="TotalNasalDose" type="ScalarMassData" minOccurs="1" maxOccurs="1"/>
+					<xs:element name="UnreleasedDrugMasses" type="ScalarMassData" minOccurs="0" maxOccurs="3"/>
+					<xs:element name="ReleasedDrugMasses" type="ScalarMassData" minOccurs="0" maxOccurs="3"/>
+				</xs:sequence>
+				<xs:attribute name="Substance" type="xs:string" use="required"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
 		<!-- @brief Pain response. -->
 	<xs:complexType name="PainStimulusData">
 		<xs:complexContent>
@@ -527,6 +541,19 @@ specific language governing permissions and limitations under the License.
 					<xs:element name="Substance" type="xs:string" minOccurs="1" maxOccurs="1"/><!--<< @brief --> 
 					<xs:element name="Concentration" type="ScalarMassPerVolumeData" minOccurs="1" maxOccurs="1"/><!--<< @brief -->
 					<xs:element name="Rate" type="ScalarVolumePerTimeData" minOccurs="1" maxOccurs="1"/><!--<< @brief -->										
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<!-- @brief The nasal administration of a substance or other compound that is given to raise its concentration in blood to an effective level. -->
+	<xs:complexType name="SubstanceNasalDoseData">
+		<xs:complexContent>
+			<xs:extension base="SubstanceAdministrationData">
+				<xs:sequence>
+					<xs:element name="Substance" type="xs:string" minOccurs="1" maxOccurs="1"/>	<!--<< @brief -->
+					<xs:element name="Dose" type="ScalarMassData" minOccurs="1" maxOccurs="1"/> <!--<< @brief -->
+          <xs:element name="ElapsedTime" type="ScalarTimeData" minOccurs="0" maxOccurs="1"/> <!--<< @brief -->
 				</xs:sequence>
 			</xs:extension>
 		</xs:complexContent>

@@ -26,6 +26,7 @@ class SEFluidCircuitPath;
 class SETissueCompartment;
 class SESubstance;
 class SESubstanceBolusState;
+class SENasalState;
 class SETransmucosalState;
 class SELiquidCompartment;
 
@@ -79,6 +80,7 @@ protected:
   void AdministerSubstanceBolus();
   void AdministerSubstanceInfusion();
   void AdministerSubstanceCompoundInfusion();
+  void AdministerSubstanceNasal();
   void AdministerSubstanceOral();
 
   void CalculatePartitionCoefficients();
@@ -90,6 +92,7 @@ protected:
 
   // Serializable member variables (Set in Initialize and in schema)
   std::map<const SESubstance*, SESubstanceBolusState*> m_BolusAdministrations;
+  std::map<const SESubstance*, SENasalState*> m_NasalStates;
   std::map<const SESubstance*, SETransmucosalState*> m_TransmucosalStates;
   double m_SarinRbcAcetylcholinesteraseComplex_nM;
   double m_AgedRbcAcetylcholinesterase_nM;
