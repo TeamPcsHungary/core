@@ -36,7 +36,7 @@ void SESubstanceOralDose::Clear()
 
 bool SESubstanceOralDose::IsValid() const
 {
-  return SESubstanceAdministration::IsValid() && HasDose() && HasAdminRoute();
+  return SESubstanceAdministration::IsValid() && HasDose() && HasAdminRoute() && m_Substance.GetPK()->HasPhysicochemicals();
 }
 
 bool SESubstanceOralDose::IsActive() const
