@@ -746,9 +746,21 @@ void Cardiovascular::PreProcess()
 //--------------------------------------------------------------------------------------------------
 void Cardiovascular::Process()
 {
+  try{
   m_circuitCalculator.Process(*m_CirculatoryCircuit, m_dT_s);
+  }catch(std::exception& e){
+	  std::cout << "csirkuit" << std::endl;
+  }
+  try{
   m_transporter.Transport(*m_CirculatoryGraph, m_dT_s);
+  }catch(std::exception& e){
+	  std::cout << "transport" << std::endl;
+  }
+  try{
   CalculateVitalSigns();
+  }catch(std::exception& e){
+	  std::cout << "vital" << std::endl;
+  }
 }
 
 //--------------------------------------------------------------------------------------------------

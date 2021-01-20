@@ -809,8 +809,18 @@ void Nervous::LocalAutoregulation()
     resistanceWidthSmall = maxResistanceMultiplierSmall - 1.0;
     resistanceSlopeSmall = (maxResistanceMultiplierSmall - 1.0) / 4.0;
   }
-  const double largePialResistanceMultiplier = ((1.0 + resistanceWidthLarge) + (1.0 - resistanceWidthLarge) * std::exp(-combinedLargePialRegulator / resistanceSlopeLarge)) / (1.0 + std::exp(-combinedLargePialRegulator / resistanceSlopeLarge));
-  const double smallPialResistanceMultiplier = ((1.0 + resistanceWidthSmall) + (1.0 - resistanceWidthSmall) * std::exp(-combinedSmallPialRegulator / resistanceSlopeSmall)) / (1.0 + std::exp(-combinedSmallPialRegulator / resistanceSlopeSmall));
+  double large_exp = std::exp(-combinedLargePialRegulator / resistanceSlopeLarge);
+  double small_exp = std::exp(-combinedSmallPialRegulator / resistanceSlopeSmall);
+  //when combinedLargePialRegulator is a large negative - exp goes to inf:
+  double largePialResistanceMultiplier = 1.0 - resistanceWidthLarge; //infinite polynomial convergence
+  double smallPialResistanceMultiplier = 1.0 - resistanceWidthSmall;
+  //normally:
+  if(!std::isinf(large_exp)){
+	   largePialResistanceMultiplier = ((1.0 + resistanceWidthLarge) + (1.0 - resistanceWidthLarge) * large_exp) / (1.0 + large_exp);
+  }
+  if(!std::isinf(small_exp)){
+	   smallPialResistanceMultiplier = ((1.0 + resistanceWidthSmall) + (1.0 - resistanceWidthSmall) * small_exp) / (1.0 + small_exp);
+  }
 
   if (!m_FeedbackActive) {
     m_CerebralBloodFlowBaseline_mL_Per_s = m_CerebralBloodFlowInput_mL_Per_s;

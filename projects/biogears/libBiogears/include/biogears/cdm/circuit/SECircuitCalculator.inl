@@ -73,8 +73,7 @@ void SECircuitCalculator<CIRCUIT_CALCULATOR_TYPES>::Process(CircuitType& circuit
   m_circuit = &circuit;
   m_dT_s = timeStep_s;
   m_valveStates.clear();
-
-  //Reset all Polarized Elements to be shorted.
+//Reset all Polarized Elements to be shorted.
   for (PathType* p : circuit.GetPolarizedElementPaths()) {
     if (p->HasNextPolarizedState())
       p->SetNextPolarizedState(CDM::enumOpenClosed::Closed);
@@ -97,10 +96,30 @@ void SECircuitCalculator<CIRCUIT_CALCULATOR_TYPES>::Process(CircuitType& circuit
     //All of the source (i.e. Pressure and Flow) values are known, as well as all element (i.e. Resistance, Compliance, Inertance, Switch on/off, Valve direction) values.
     //We'll solve for all of the circuit's node pressures and Pressure Source Flows simultaneously using an error minimization numerical solver.
     //Then we calculate the flows and voltages based on those Pressures and Element values.
+	try{
+		try{
     ParseIn();
+	  }catch(std::exception& e){
+	  std::cout << "parsein" << std::endl;
+	}
+	try{
     Solve();
+	  }catch(std::exception& e){
+	  std::cout << "solvein" << std::endl;
+	}
+	try{
     ParseOut();
+	  }catch(std::exception& e){
+		std::cout << "parseout" << std::endl;
+	  }
+	try{
     CalculateFluxes();
+	 }catch(std::exception& e){
+		std::cout << "calcflux" << std::endl;
+	  }
+	}catch(std::exception& e){
+	  std::cout << "dodododo" << std::endl;
+	}
   } while (!CheckAndModifyValves());
 #ifdef VERBOSE
   std::cout << "Number of Valve Loops = " << i << std::endl;
@@ -184,11 +203,14 @@ void SECircuitCalculator<CIRCUIT_CALCULATOR_TYPES>::ParseIn()
     //Skip known reference node (see comment above)
     if (m_circuit->IsReferenceNode(*n))
       continue;
-
     for (PathType* p : *m_circuit->GetConnectedPaths(*n)) {
       NodeType* nSrc = &p->GetSourceNode();
       NodeType* nTgt = &p->GetTargetNode();
-
+	  /*if(p->GetName().compare("CerebralArteries2ToCapillaries") == 0){ //NumberOfNextElements() = 1, HasNextResistance(), HasFlux()
+		  std::cout << "UFF " << p->GetName() << " " << p->NumberOfNextElements() << " " << p->HasNextPotentialSource() << " " << p->HasNextResistance() << " " <<  p->HasNextPolarizedState() 
+			 << " " <<  p->HasNextSwitch() << " " <<  p->HasNextCapacitance() << " " << p->HasCapacitance() << " " << p->HasFlux() << " " << p->HasNextInductance() 
+			 << " " << p->HasNextValve()<< " " << p->HasNextFluxSource()  << " " << p->GetNextResistance().IsValid() << " " << p->HasPotentialSource() << std::endl;
+	  }*/
       if (p->HasNextPolarizedState() && p->GetNextPolarizedState() == CDM::enumOpenClosed::Open) { //Polarized elements that are open are done exactly the same as a open switch.
         //We'll check to see if the resulting pressure difference is valid later.
         //Model as an open switch
@@ -343,22 +365,27 @@ void SECircuitCalculator<CIRCUIT_CALCULATOR_TYPES>::ParseIn()
   //We also model closed Switches, "closed" Valves (those allowing flow), and shorts (paths without an element) as 0Pa Pressure Sources.
   //All pressure sources will have their Flow directly solved by adding equations for known Node pressure differences caused by them.
   //We add rows for these equations after the KCL equations (hence the iNodeSize+i).
+  
   for (auto itr : m_potentialSources) {
     PathType* p = itr.first;
     NodeType& nSrc = p->GetSourceNode();
     NodeType& nTgt = p->GetTargetNode();
-
-    if (!m_circuit->IsReferenceNode(nSrc)) {
+	if (!m_circuit->IsReferenceNode(nSrc)) {
       m_AMatrix(itr.second, m_circuit->GetCalculatorIndex(nSrc)) = -1;
     }
-    if (!m_circuit->IsReferenceNode(nTgt)) {
+	if (!m_circuit->IsReferenceNode(nTgt)) {
       m_AMatrix(itr.second, m_circuit->GetCalculatorIndex(nTgt)) = 1;
     }
-
+	//if (p->HasNextSwitch() || p->HasNextValve() || p->NumberOfNextElements() < 1 || !p->HasNextPotentialSource()) {
     if (p->HasNextSwitch() || p->HasNextValve() || p->NumberOfNextElements() < 1) {
       m_bVector(itr.second) = 0.0;
     } else {
-      m_bVector(itr.second) += p->GetNextPotentialSource().GetValue(m_PotentialUnit);
+		//try{
+			//if(p->HasNextPotentialSource())	m_bVector(itr.second) += p->GetNextPotentialSource().GetValue(m_PotentialUnit);
+			m_bVector(itr.second) += p->GetNextPotentialSource().GetValue(m_PotentialUnit);
+		//}catch(std::exception& e){
+			//std::cout << "parse4 " << p->GetName() << " " << p->NumberOfNextElements() << " " << p->HasNextPotentialSource() << " " << p->HasNextResistance() << std::endl;
+		//}
     }
   }
 }
