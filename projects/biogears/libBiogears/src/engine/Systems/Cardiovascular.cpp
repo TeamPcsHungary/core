@@ -225,10 +225,11 @@ void Cardiovascular::Initialize()
   TuneCircuit();
   systemicVascularResistance_mmHg_s_Per_mL = (GetMeanArterialPressure().GetValue(PressureUnit::mmHg) - GetMeanCentralVenousPressure().GetValue(PressureUnit::mmHg)) / GetCardiacOutput().GetValue(VolumePerTimeUnit::mL_Per_s);
   GetSystemicVascularResistance().SetValue(systemicVascularResistance_mmHg_s_Per_mL, FlowResistanceUnit::mmHg_s_Per_mL);
+  //already loaded?
   m_LeftHeartElastanceMax_mmHg_Per_mL = m_data.GetConfiguration().GetLeftHeartElastanceMaximum(FlowElastanceUnit::mmHg_Per_mL);
   m_RightHeartElastanceMax_mmHg_Per_mL = m_data.GetConfiguration().GetRightHeartElastanceMaximum(FlowElastanceUnit::mmHg_Per_mL);
   m_patient->GetBloodVolumeBaseline().Set(GetBloodVolume());
-
+  //why not m_LeftHeartElastanceMin_mmHg_Per_mL?
   m_OverrideLHEMin_Conformant_mmHg = m_data.GetConfiguration().GetLeftHeartElastanceMinimum(FlowElastanceUnit::mmHg_Per_mL); //m_patient->GetSystolicArterialPressureBaseline(PressureUnit::mmHg);
   m_OverrideRHEMin_Conformant_mmHg = m_data.GetConfiguration().GetRightHeartElastanceMinimum(FlowElastanceUnit::mmHg_Per_mL); //m_patient->GetDiastolicArterialPressureBaseline(PressureUnit::mmHg);
   m_OverrideLHEMax_Conformant_mmHg = m_LeftHeartElastanceMax_mmHg_Per_mL;
@@ -254,6 +255,12 @@ bool Cardiovascular::Load(const CDM::BioGearsCardiovascularSystemData& in)
   m_RightHeartElastance_mmHg_Per_mL = in.RightHeartElastance_mmHg_Per_mL();
   m_RightHeartElastanceMax_mmHg_Per_mL = in.RightHeartElastanceMax_mmHg_Per_mL();
   m_RightHeartElastanceMin_mmHg_Per_mL = in.RightHeartElastanceMin_mmHg_Per_mL();
+  
+  //Initialize() is not run when loading a state - these need to be init
+  m_OverrideLHEMax_Conformant_mmHg = m_LeftHeartElastanceMax_mmHg_Per_mL;
+  m_OverrideRHEMax_Conformant_mmHg = m_RightHeartElastanceMax_mmHg_Per_mL;
+  m_OverrideLHEMin_Conformant_mmHg = m_LeftHeartElastanceMin_mmHg_Per_mL;
+  m_OverrideRHEMin_Conformant_mmHg = m_RightHeartElastanceMin_mmHg_Per_mL;
 
   m_CompressionTime_s = in.CompressionTime_s();
   m_CompressionRatio = in.CompressionRatio();
@@ -746,21 +753,9 @@ void Cardiovascular::PreProcess()
 //--------------------------------------------------------------------------------------------------
 void Cardiovascular::Process()
 {
-  try{
   m_circuitCalculator.Process(*m_CirculatoryCircuit, m_dT_s);
-  }catch(std::exception& e){
-	  std::cout << "csirkuit" << std::endl;
-  }
-  try{
   m_transporter.Transport(*m_CirculatoryGraph, m_dT_s);
-  }catch(std::exception& e){
-	  std::cout << "transport" << std::endl;
-  }
-  try{
   CalculateVitalSigns();
-  }catch(std::exception& e){
-	  std::cout << "vital" << std::endl;
-  }
 }
 
 //--------------------------------------------------------------------------------------------------
