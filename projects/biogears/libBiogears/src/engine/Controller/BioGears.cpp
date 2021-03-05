@@ -501,10 +501,20 @@ bool BioGears::SetupPatient()
   double diastolic_mmHg;
   double systolicStandard_mmHg = 114.0;
   double diastolicStandard_mmHg = 73.5;
-  double systolicMax_mmHg = 120.0; //Hypertension
-  double diastolicMax_mmHg = 80.0; //Hypertension
-  double systolicMin_mmHg = 90.0; //Hypotension
-  double diastolicMin_mmHg = 60.0; //Hypotension
+  //double systolicMax_mmHg = 120.0; //Hypertension
+  //double diastolicMax_mmHg = 80.0; //Hypertension
+  //double systolicMin_mmHg = 90.0; //Hypotension
+  //double diastolicMin_mmHg = 60.0; //Hypotension
+  double systolicHyper_mmHg = 120.0; //Hypertension
+  double diastolicHyper_mmHg = 80.0; //Hypertension
+  double systolicHypo_mmHg = 90.0; //Hypotension
+  double diastolicHypo_mmHg = 60.0; //Hypotension
+  
+  double systolicMax_mmHg = 150.0; //hard limit tuning fails above it
+  double diastolicMax_mmHg = 120.0; //Hypertension
+  double systolicMin_mmHg = 90.0; //hard limit tuning fails below this
+  double diastolicMin_mmHg = 40.0; //Hypotension
+  
   double narrowestPulseFactor = 0.75; //From Wikipedia: Pulse Pressure
   if (!m_Patient->HasSystolicArterialPressureBaseline()) {
     systolic_mmHg = systolicStandard_mmHg;
@@ -512,9 +522,13 @@ bool BioGears::SetupPatient()
     m_Logger->Info(std::stringstream() << "No patient systolic pressure baseline set. Using the standard value of " << systolic_mmHg << " mmHg.");
   }
   systolic_mmHg = m_Patient->GetSystolicArterialPressureBaseline(PressureUnit::mmHg);
-  if (systolic_mmHg < systolicMin_mmHg) {
+  if (systolic_mmHg < systolicHypo_mmHg) {
+	m_Logger->Warning(std::stringstream() << "Patient systolic pressure baseline of " << systolic_mmHg << " creates Hypotension, no guarantees of convergence.");
+  } else if (systolic_mmHg < systolicMin_mmHg) {
     m_Logger->Error(std::stringstream() << "Patient systolic pressure baseline of " << systolic_mmHg << " mmHg is too low. Hypotension must be modeled by adding/using a condition. Minimum systolic pressure baseline allowed is " << systolicMin_mmHg << " mmHg.");
     err = true;
+  } else if (systolic_mmHg > systolicHyper_mmHg) {
+	m_Logger->Warning(std::stringstream() << "Patient systolic pressure baseline of " << systolic_mmHg << " creates Hypertension, no guarantees of convergence.");
   } else if (systolic_mmHg > systolicMax_mmHg) {
     m_Logger->Error(std::stringstream() << "Patient systolic pressure baseline of " << systolic_mmHg << " mmHg is too high. Hypertension must be modeled by adding/using a condition. Maximum systolic pressure baseline allowed is " << systolicMax_mmHg << " mmHg.");
     err = true;
@@ -526,9 +540,13 @@ bool BioGears::SetupPatient()
     m_Logger->Info(std::stringstream() << "No patient diastolic pressure baseline set. Using the standard value of " << diastolic_mmHg << " mmHg.");
   }
   diastolic_mmHg = m_Patient->GetDiastolicArterialPressureBaseline(PressureUnit::mmHg);
-  if (diastolic_mmHg < diastolicMin_mmHg) {
+  if (systolic_mmHg < diastolicHypo_mmHg) {
+	m_Logger->Warning(std::stringstream() << "Patient diastolic pressure baseline of " << diastolic_mmHg << " creates Hypotension, no guarantees of convergence.");
+  } else if (diastolic_mmHg < diastolicMin_mmHg) {
     m_Logger->Error(std::stringstream() << "Patient diastolic pressure baseline of " << diastolic_mmHg << " mmHg is too low. Hypotension must be modeled by adding/using a condition. Minimum diastolic pressure baseline allowed is " << diastolicMin_mmHg << " mmHg.");
     err = true;
+  } else if (systolic_mmHg > systolicHyper_mmHg) {
+	m_Logger->Warning(std::stringstream() << "Patient diastolic pressure baseline of " << diastolic_mmHg << " creates Hypertension, no guarantees of convergence.");
   } else if (diastolic_mmHg > diastolicMax_mmHg) {
     m_Logger->Error(std::stringstream() << "Patient diastolic pressure baseline of " << diastolic_mmHg << " mmHg is too high. Hypertension must be modeled by adding/using a condition. Maximum diastolic pressure baseline allowed is " << diastolicMax_mmHg << " mmHg.");
     err = true;
